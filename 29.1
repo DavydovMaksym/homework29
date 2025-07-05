@@ -1,0 +1,95 @@
+#include <iostream>
+
+template <typename T>
+struct Node
+{
+    T data;
+    Node* next;
+    Node* prev;
+    Node(const T& value) : data(value), next(nullptr), prev(nullptr) {}
+};
+
+template <typename T>
+class Queue
+{
+    Node<T>* head;
+    Node<T>* tail;
+
+public:
+    Queue() : head(nullptr), tail(nullptr) {}
+
+    ~Queue()
+    {
+        while (!IsEmpty())
+        {
+            Dequeue();
+        }
+    }
+
+    bool IsEmpty() const
+    {
+        return head == nullptr;
+    }
+
+    void Enqueue(const T& value)
+    {
+        Node<T>* newNode = new Node<T>(value);
+        if (IsEmpty())
+        {
+            head = tail = newNode;
+        }
+        else
+        {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+
+    void Dequeue()
+    {
+        if (IsEmpty())
+        {
+            std::cout << "The queue is empty.\n";
+            return;
+        }
+
+        Node<T>* temp = head;
+        head = head->next;
+        if (head != nullptr)
+        {
+            head->prev = nullptr;
+        }
+        else
+        {
+            tail = nullptr;
+        }
+        delete temp;
+    }
+
+    void Print() const
+    {
+        Node<T>* current = head;
+        while (current != nullptr)
+        {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << "\n";
+    }
+};
+
+int main()
+{
+    Queue<int> q;
+    q.Enqueue(10);
+    q.Enqueue(20);
+    q.Enqueue(30);
+
+    q.Print();
+
+    q.Dequeue();
+    q.Print();
+
+    return 0;
+}

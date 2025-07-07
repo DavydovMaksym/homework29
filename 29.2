@@ -1,0 +1,175 @@
+#include <iostream>
+
+template <typename T>
+struct Node
+{
+    T data;
+    Node* prev;
+    Node* next;
+    Node(const T& value) : data(value), prev(nullptr), next(nullptr) {}
+};
+
+template <typename T>
+class DoublyLinkedList
+{
+    Node<T>* head;
+    Node<T>* tail;
+
+public:
+    DoublyLinkedList() : head(nullptr), tail(nullptr) {}
+
+    ~DoublyLinkedList()
+    {
+        Clear();
+    }
+
+    void AddToTail(const T& value)
+    {
+        Node<T>* newNode = new Node<T>(value);
+        if (!head)
+        {
+            head = tail = newNode;
+        }
+        else
+        {
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+
+    void Print() const
+    {
+        Node<T>* current = head;
+        while (current)
+        {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << "\n";
+    }
+
+    Node<T>* Clone() const
+    {
+        DoublyLinkedList<T>* clone = new DoublyLinkedList<T>();
+        Node<T>* current = head;
+        while (current)
+        {
+            clone->AddToTail(current->data);
+            current = current->next;
+        }
+        return clone->head;
+    }
+
+    Node<T>* operator+(const DoublyLinkedList<T>& other) const
+    {
+        DoublyLinkedList<T>* result = new DoublyLinkedList<T>();
+
+        Node<T>* current = head;
+        while (current)
+        {
+            result->AddToTail(current->data);
+            current = current->next;
+        }
+
+        current = other.head;
+        while (current)
+        {
+            result->AddToTail(current->data);
+            current = current->next;
+        }
+
+        return result->head;
+    }
+
+    Node<T>* operator*(const DoublyLinkedList<T>& other) const
+    {
+        DoublyLinkedList<T>* result = new DoublyLinkedList<T>();
+
+        for (Node<T>* a = head; a != nullptr; a = a->next)
+        {
+            for (Node<T>* b = other.head; b != nullptr; b = b->next)
+            {
+                if (a->data == b->data)
+                {
+                    bool exists = false;
+                    for (Node<T>* r = result->head; r != nullptr; r = r->next)
+                    {
+                        if (r->data == a->data)
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists)
+                    {
+                        result->AddToTail(a->data);
+                    }
+                }
+            }
+        }
+
+        return result->head;
+    }
+
+    void Clear()
+    {
+        Node<T>* current = head;
+        while (current)
+        {
+            Node<T>* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        head = tail = nullptr;
+    }
+
+    Node<T>* GetHead() const
+    {
+        return head;
+    }
+};
+
+int main()
+{
+    DoublyLinkedList<int> list1;
+    list1.AddToTail(1);
+    list1.AddToTail(2);
+    list1.AddToTail(3);
+
+    DoublyLinkedList<int> list2;
+    list2.AddToTail(3);
+    list2.AddToTail(4);
+    list2.AddToTail(5);
+
+    std::cout << "List 1: ";
+    list1.Print();
+    std::cout << "List 2: ";
+    list2.Print();
+
+    Node<int>* clone = list1.Clone();
+    std::cout << "Cloned list 1: ";
+    for (Node<int>* p = clone; p != nullptr; p = p->next)
+    {
+        std::cout << p->data << " ";
+    }
+    std::cout << "\n";
+
+    Node<int>* sum = list1 + list2;
+    std::cout << "Unification (+): ";
+    for (Node<int>* p = sum; p != nullptr; p = p->next)
+    {
+        std::cout << p->data << " ";
+    }
+    std::cout << "\n";
+
+    Node<int>* common = list1 * list2;
+    std::cout << "Common elements (*): ";
+    for (Node<int>* p = common; p != nullptr; p = p->next)
+    {
+        std::cout << p->data << " ";
+    }
+    std::cout << "\n";
+
+    return 0;
+}

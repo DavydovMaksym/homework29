@@ -1,0 +1,341 @@
+#include <iostream>
+
+template <typename T>
+struct Node
+{
+    T data;
+    Node* prev;
+    Node* next;
+    Node(const T& value = T()) : data(value), prev(nullptr), next(nullptr) {}
+};
+
+template <typename T>
+class Array
+{
+    Node<T>* head;
+    int size;
+    int capacity;
+    int growBy;
+
+    Node<T>* GetNode(int index) const
+    {
+        if (index < 0 || index >= capacity)
+        {
+            return nullptr;
+        }
+        Node<T>* current = head;
+        for (int i = 0; i < index && current; ++i)
+        {
+            current = current->next;
+        }
+        return current;
+    }
+
+    void Clear()
+    {
+        Node<T>* current = head;
+        while (current)
+        {
+            Node<T>* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        head = nullptr;
+        size = 0;
+        capacity = 0;
+    }
+
+    void AddNode()
+    {
+        Node<T>* newNode = new Node<T>();
+        if (!head)
+        {
+            head = newNode;
+        }
+        else
+        {
+            Node<T>* tail = GetNode(capacity - 1);
+            tail->next = newNode;
+            newNode->prev = tail;
+        }
+        ++capacity;
+    }
+
+public:
+    Array() : head(nullptr), size(0), capacity(0), growBy(1) {}
+
+    ~Array()
+    {
+        Clear();
+    }
+
+    int GetSize() const
+    {
+        return size;
+    }
+
+    void SetSize(int newSize, int grow = 1)
+    {
+        growBy = grow;
+
+        if (newSize < size)
+        {
+            Node<T>* node = GetNode(newSize);
+            if (node && node->prev)
+            {
+                node->prev->next = nullptr;
+            }
+
+            while (size > newSize)
+            {
+                Node<T>* last = GetNode(size - 1);
+                delete last;
+                --size;
+                --capacity;
+            }
+        }
+        else if (newSize > capacity)
+        {
+            while (capacity < newSize)
+            {
+                AddNode();
+            }
+        }
+
+        size = newSize;
+    }
+
+    int GetUpperBound() const
+    {
+        return size - 1;
+    }
+
+    bool IsEmpty() const
+    {
+        return size == 0;
+    }
+
+    void FreeExtra()
+    {
+        if (size < capacity)
+        {
+            Node<T>* node = GetNode(size);
+            if (node && node->prev)
+            {
+                node->prev->next = nullptr;
+            }
+
+            while (capacity > size)
+            {
+                Node<T>* last = GetNode(capacity - 1);
+                delete last;
+                --capacity;
+            }
+        }
+    }
+
+    void RemoveAll()
+    {
+        Clear();
+    }
+
+    T GetAt(int index) const
+    {
+        Node<T>* node = GetNode(index);
+        if (node)
+        {
+            return node->data;
+        }
+        return T();
+    }
+
+    void SetAt(int index, const T& value)
+    {
+        Node<T>* node = GetNode(index);
+        if (node)
+        {
+            node->data = value;
+        }
+    }
+
+    T& operator[](int index)
+    {
+        static T dummy = T();
+        Node<T>* node = GetNode(index);
+        if (!node)
+        {
+            return dummy;
+        }
+        return node->data;
+    }
+
+    const T& operator[](int index) const
+    {
+        static T dummy = T();
+        Node<T>* node = GetNode(index);
+        if (!node)
+        {
+            return dummy;
+        }
+        return node->data;
+    }
+
+    int Add(const T& value)
+    {
+        if (size == capacity)
+        {
+            SetSize(capacity + growBy, growBy);
+        }
+        SetAt(size, value);
+        ++size;
+        return size - 1;
+    }
+
+    void Append(const Array<T>& other)
+    {
+        for (int i = 0; i < other.GetSize(); ++i)
+        {
+            Add(other[i]);
+        }
+    }
+
+    Array<T>& operator=(const Array<T>& other)
+    {
+        if (this != &other)
+        {
+            Clear();
+            growBy = other.growBy;
+            SetSize(other.GetSize(), growBy);
+            for (int i = 0; i < other.GetSize(); ++i)
+            {
+                SetAt(i, other[i]);
+            }
+        }
+        return *this;
+    }
+
+    T* GetData()
+    {
+        if (size == 0)
+        {
+            return nullptr;
+        }
+        T* result = new T[size];
+        Node<T>* current = head;
+        for (int i = 0; i < size; ++i)
+        {
+            result[i] = current->data;
+            current = current->next;
+        }
+        return result;
+    }
+
+    void InsertAt(int index, const T& value)
+    {
+        if (index < 0 || index > size)
+        {
+            return;
+        }
+
+        if (size == capacity)
+        {
+            SetSize(capacity + growBy, growBy);
+        }
+
+        Node<T>* newNode = new Node<T>(value);
+
+        if (index == 0)
+        {
+            newNode->next = head;
+            if (head)
+            {
+                head->prev = newNode;
+            }
+            head = newNode;
+        }
+        else
+        {
+            Node<T>* prevNode = GetNode(index - 1);
+            newNode->next = prevNode ? prevNode->next : nullptr;
+            newNode->prev = prevNode;
+            if (prevNode)
+            {
+                if (prevNode->next)
+                {
+                    prevNode->next->prev = newNode;
+                }
+                prevNode->next = newNode;
+            }
+        }
+
+        ++size;
+        ++capacity;
+    }
+
+    void RemoveAt(int index)
+    {
+        if (index < 0 || index >= size)
+        {
+            return;
+        }
+
+        Node<T>* nodeToDelete = GetNode(index);
+        if (!nodeToDelete)
+        {
+            return;
+        }
+
+        if (nodeToDelete->prev)
+        {
+            nodeToDelete->prev->next = nodeToDelete->next;
+        }
+        else
+        {
+            head = nodeToDelete->next;
+        }
+
+        if (nodeToDelete->next)
+        {
+            nodeToDelete->next->prev = nodeToDelete->prev;
+        }
+
+        delete nodeToDelete;
+        --size;
+        --capacity;
+    }
+
+    void Print() const
+    {
+        Node<T>* current = head;
+        while (current)
+        {
+            std::cout << current->data << " ";
+            current = current->next;
+        }
+        std::cout << "\n";
+    }
+};
+
+int main()
+{
+    Array<int> arr;
+    arr.SetSize(5, 2);
+
+    for (int i = 0; i < 5; ++i)
+        arr[i] = i * 10;
+
+    arr.Add(50);
+    arr.Add(60);
+
+    arr.Print();
+
+    arr.InsertAt(3, 99);
+    arr.Print();
+
+    arr.RemoveAt(0);
+    arr.Print();
+
+    arr.FreeExtra();
+
+    return 0;
+}

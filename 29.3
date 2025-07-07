@@ -120,16 +120,18 @@ public:
         if (size < capacity)
         {
             Node<T>* node = GetNode(size);
-            if (node && node->prev)
-            {
-                node->prev->next = nullptr;
-            }
+            
 
             while (capacity > size)
             {
                 Node<T>* last = GetNode(capacity - 1);
                 delete last;
                 --capacity;
+            }
+
+            if (node && node->prev)
+            {
+                node->prev->next = nullptr;
             }
         }
     }
